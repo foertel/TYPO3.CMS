@@ -46,6 +46,13 @@ class QueryResult implements QueryResultInterface {
 	protected $queryResult;
 
 	/**
+	 * A map of all availbale lazyObjects
+	 *
+	 * @var array
+	 */
+	protected $lazyObjectMap = array();
+
+	/**
 	 * Constructor
 	 *
 	 * @param \TYPO3\CMS\Extbase\Persistence\QueryInterface $query
@@ -61,7 +68,13 @@ class QueryResult implements QueryResultInterface {
 	 */
 	protected function initialize() {
 		if (!is_array($this->queryResult)) {
-			$this->queryResult = $this->dataMapper->map($this->query->getType(), $this->persistenceManager->getObjectDataByQuery($this->query));
+			list($this->queryResult, $this->lazyObjectMap) = $this->dataMapper->map($this->query->getType(), $this->persistenceManager->getObjectDataByQuery($this->query));
+
+			foreach ($this->lazyObjectMap as $propertyName => $lazyObjects) {
+				foreach ($lazyObjects as $lazyObject) {
+					$lazyObject->setParentQueryResult($this);
+				}
+			}
 		}
 	}
 
@@ -88,12 +101,13 @@ class QueryResult implements QueryResultInterface {
 		} else {
 			$query = $this->getQuery();
 			$query->setLimit(1);
-			$queryResult = $this->dataMapper->map($query->getType(), $this->persistenceManager->getObjectDataByQuery($query));
+			list($queryResult) = $this->dataMapper->map($query->getType(), $this->persistenceManager->getObjectDataByQuery($query));
 		}
 		$firstResult = current($queryResult);
 		if ($firstResult === FALSE) {
 			$firstResult = NULL;
 		}
+
 		return $firstResult;
 	}
 
@@ -119,6 +133,7 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function toArray() {
 		$this->initialize();
+
 		return iterator_to_array($this);
 	}
 
@@ -132,6 +147,7 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function offsetExists($offset) {
 		$this->initialize();
+
 		return isset($this->queryResult[$offset]);
 	}
 
@@ -142,6 +158,7 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function offsetGet($offset) {
 		$this->initialize();
+
 		return isset($this->queryResult[$offset]) ? $this->queryResult[$offset] : NULL;
 	}
 
@@ -176,6 +193,7 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function current() {
 		$this->initialize();
+
 		return current($this->queryResult);
 	}
 
@@ -185,6 +203,7 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function key() {
 		$this->initialize();
+
 		return key($this->queryResult);
 	}
 
@@ -212,6 +231,7 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function valid() {
 		$this->initialize();
+
 		return current($this->queryResult) !== FALSE;
 	}
 

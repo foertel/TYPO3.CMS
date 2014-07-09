@@ -13,6 +13,8 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  * The TYPO3 project - inspiring people to share!
  */
+use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
+
 /**
  * A proxy that can replace any object and replaces itself in it's parent on
  * first access (call, get, set, isset, unset).
@@ -60,6 +62,11 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 * @var bool
 	 */
 	protected $isInitialized = FALSE;
+
+	/**
+	 * @var QueryResultInterface
+	 */
+	protected $parentQueryResult;
 
 	/**
 	 * Returns the state of the initialization
@@ -140,6 +147,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function contains($object) {
 		$this->initialize();
+
 		return parent::contains($object);
 	}
 
@@ -161,6 +169,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 		if (is_null($numberOfElements)) {
 			throw new \TYPO3\CMS\Extbase\Persistence\Generic\Exception('The number of elements could not be determined.', 1252514486);
 		}
+
 		return $numberOfElements;
 	}
 
@@ -171,6 +180,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function current() {
 		$this->initialize();
+
 		return parent::current();
 	}
 
@@ -191,6 +201,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function key() {
 		$this->initialize();
+
 		return parent::key();
 	}
 
@@ -210,6 +221,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function offsetExists($object) {
 		$this->initialize();
+
 		return parent::offsetExists($object);
 	}
 
@@ -221,6 +233,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function offsetGet($object) {
 		$this->initialize();
+
 		return parent::offsetGet($object);
 	}
 
@@ -272,6 +285,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function valid() {
 		$this->initialize();
+
 		return parent::valid();
 	}
 
@@ -282,6 +296,7 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function toArray() {
 		$this->initialize();
+
 		return parent::toArray();
 	}
 
@@ -291,6 +306,15 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function getPosition($object) {
 		$this->initialize();
+
 		return parent::getPosition($object);
+	}
+
+	/**
+	 * @param QueryResultInterface $parentQueryResult
+	 * @return void
+	 */
+	public function setParentQueryResult(QueryResultInterface $parentQueryResult) {
+		$this->parentQueryResult = $parentQueryResult;
 	}
 }

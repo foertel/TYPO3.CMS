@@ -93,14 +93,17 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param string $className The name of the class
 	 * @param array $rows An array of arrays with field_name => value pairs
-	 * @return array An array of objects of the given class
+	 * @return array An array containing mapped objects and a map of generated lazyObjects
 	 */
 	public function map($className, array $rows) {
 		$objects = array();
+		$lazyObjectMap = array();
 		foreach ($rows as $row) {
-			$objects[] = $this->mapSingleRow($this->getTargetType($className, $row), $row);
+			list($objects[], $currentLazyObjectMap) = $this->mapSingleRow($this->getTargetType($className, $row), $row);
+			$lazyObjectMap = array_merge_recursive($lazyObjectMap, $currentLazyObjectMap);
 		}
-		return $objects;
+
+		return array($objects, $lazyObjectMap);
 	}
 
 	/**
@@ -122,6 +125,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		}
+
 		return $targetType;
 	}
 
@@ -130,19 +134,22 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param string $className The name of the target class
 	 * @param array $row A single array with field_name => value pairs
-	 * @return object An object of the given class
+	 * @return array An object of the given class and the lazyObjectMap
 	 */
 	protected function mapSingleRow($className, array $row) {
+		$lazyObjectMap = array();
+
 		if ($this->identityMap->hasIdentifier($row['uid'], $className)) {
 			$object = $this->identityMap->getObjectByIdentifier($row['uid'], $className);
 		} else {
 			$object = $this->createEmptyObject($className);
 			$this->identityMap->registerObject($object, $row['uid']);
-			$this->thawProperties($object, $row);
+			$lazyObjectMap = $this->thawProperties($object, $row);
 			$object->_memorizeCleanState();
 			$this->persistenceSession->registerReconstitutedEntity($object);
 		}
-		return $object;
+
+		return array($object, $lazyObjectMap);
 	}
 
 	/**
@@ -168,7 +175,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 *
 	 * @param DomainObjectInterface $object The object to set properties on
 	 * @param array $row
-	 * @return void
+	 * @return array the map of lazyObjects generated while mapping
 	 */
 	protected function thawProperties(DomainObjectInterface $object, array $row) {
 		$className = get_class($object);
@@ -183,6 +190,9 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				$object->_setProperty('_localizedUid', (int)$row['_LOCALIZED_UID']);
 			}
 		}
+
+		$lazyObjectMap = array();
+
 		$properties = $object->_getProperties();
 		foreach ($properties as $propertyName => $propertyValue) {
 			if (!$dataMap->isPersistableProperty($propertyName)) {
@@ -230,13 +240,18 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 								$row[$columnName]
 							);
 						}
-
 				}
 			}
 			if ($propertyValue !== NULL) {
 				$object->_setProperty($propertyName, $propertyValue);
+
+				if ($propertyValue instanceof Persistence\Generic\LoadingStrategyInterface) {
+					$lazyObjectMap[$propertyName][] = $propertyValue;
+				}
 			}
 		}
+
+		return $lazyObjectMap;
 	}
 
 	/**
@@ -267,6 +282,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			$utcTimeZone = new \DateTimeZone('UTC');
 			$utcDateTime = new \DateTime($value, $utcTimeZone);
 			$currentTimeZone = new \DateTimeZone(date_default_timezone_get());
+
 			return $utcDateTime->setTimezone($currentTimeZone);
 		} else {
 			return new \DateTime(date('c', $value));
@@ -297,6 +313,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		} else {
 			$result = $this->fetchRelatedEager($parentObject, $propertyName, $fieldValue);
 		}
+
 		return $result;
 	}
 
@@ -320,6 +337,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	protected function getEmptyRelationValue(DomainObjectInterface $parentObject, $propertyName) {
 		$columnMap = $this->getDataMap(get_class($parentObject))->getColumnMap($propertyName);
 		$relatesToOne = $columnMap->getTypeOfRelation() == ColumnMap::RELATION_HAS_ONE;
+
 		return $relatesToOne ? NULL : array();
 	}
 
@@ -331,6 +349,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function getNonEmptyRelationValue(DomainObjectInterface $parentObject, $propertyName, $fieldValue) {
 		$query = $this->getPreparedQuery($parentObject, $propertyName, $fieldValue);
+
 		return $query->execute();
 	}
 
@@ -359,6 +378,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			}
 		}
 		$query->matching($this->getConstraint($query, $parentObject, $propertyName, $fieldValue, $columnMap->getRelationTableMatchFields()));
+
 		return $query;
 	}
 
@@ -390,6 +410,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				$constraint = $query->logicalAnd($constraint, $query->equals($relationTableMatchFieldName, $relationTableMatchFieldValue));
 			}
 		}
+
 		return $constraint;
 	}
 
@@ -407,6 +428,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		$right = $this->qomFactory->selector($childClassName, $columnMap->getChildTableName());
 		$joinCondition = $this->qomFactory->equiJoinCondition($columnMap->getRelationTableName(), $columnMap->getChildKeyFieldName(), $columnMap->getChildTableName(), 'uid');
 		$source = $this->qomFactory->join($left, $right, Persistence\Generic\Query::JCR_JOIN_TYPE_INNER, $joinCondition);
+
 		return $source;
 	}
 
@@ -427,8 +449,8 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function mapObjectToClassProperty(DomainObjectInterface $parentObject, $propertyName, $fieldValue) {
 		if ($this->propertyMapsByForeignKey($parentObject, $propertyName)) {
-				$result = $this->fetchRelated($parentObject, $propertyName, $fieldValue);
-				$propertyValue = $this->mapResultToPropertyValue($parentObject, $propertyName, $result);
+			$result = $this->fetchRelated($parentObject, $propertyName, $fieldValue);
+			$propertyValue = $this->mapResultToPropertyValue($parentObject, $propertyName, $result);
 		} else {
 			if ($fieldValue === '') {
 				$propertyValue = $this->getEmptyRelationValue($parentObject, $propertyName);
@@ -455,6 +477,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function propertyMapsByForeignKey(DomainObjectInterface $parentObject, $propertyName) {
 		$columnMap = $this->getDataMap(get_class($parentObject))->getColumnMap($propertyName);
+
 		return ($columnMap->getParentKeyFieldName() !== NULL);
 	}
 
@@ -472,7 +495,11 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			$propertyValue = $result;
 		} else {
 			$propertyMetaData = $this->reflectionService->getClassSchema(get_class($parentObject))->getProperty($propertyName);
-			if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'SplObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage', 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage'), TRUE)) {
+			if (in_array(
+				$propertyMetaData['type'],
+				array('array', 'ArrayObject', 'SplObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage', 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage'),
+				TRUE
+			)) {
 				$objects = array();
 				foreach ($result as $value) {
 					$objects[] = $value;
@@ -496,6 +523,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		}
+
 		return $propertyValue;
 	}
 
@@ -509,6 +537,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function countRelated(DomainObjectInterface $parentObject, $propertyName, $fieldValue = '') {
 		$query = $this->getPreparedQuery($parentObject, $propertyName, $fieldValue);
+
 		return $query->execute()->count();
 	}
 
@@ -522,6 +551,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function isPersistableProperty($className, $propertyName) {
 		$dataMap = $this->getDataMap($className);
+
 		return $dataMap->isPersistableProperty($propertyName);
 	}
 
@@ -539,6 +569,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		if (!isset($this->dataMaps[$className])) {
 			$this->dataMaps[$className] = $this->dataMapFactory->buildDataMap($className);
 		}
+
 		return $this->dataMaps[$className];
 	}
 
@@ -554,6 +585,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		} else {
 			$tableName = strtolower($className);
 		}
+
 		return $tableName;
 	}
 
@@ -574,6 +606,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		}
+
 		return \TYPO3\CMS\Core\Utility\GeneralUtility::camelCaseToLowerCaseUnderscored($propertyName);
 	}
 
@@ -594,6 +627,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		} else {
 			throw new UnexpectedTypeException('Could not determine the child object type.', 1251315967);
 		}
+
 		return $type;
 	}
 
@@ -650,6 +684,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 		} else {
 			$parameter = $this->getPlainStringValue($input, $parseStringValueCallback, $parseStringValueCallbackParameters);
 		}
+
 		return $parameter;
 	}
 
@@ -662,10 +697,11 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param array $additionalParameters Optional additional parameters passed to the callback as second argument.
 	 * @return string
 	 */
-	protected function getPlainStringValue($value, $callback = NULL , array $additionalParameters = array()) {
+	protected function getPlainStringValue($value, $callback = NULL, array $additionalParameters = array()) {
 		if (is_callable($callback)) {
 			$value = call_user_func($callback, $value, $additionalParameters);
 		}
+
 		return (string)$value;
 	}
 }

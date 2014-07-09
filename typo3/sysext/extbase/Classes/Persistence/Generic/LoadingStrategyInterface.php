@@ -13,9 +13,16 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  * The TYPO3 project - inspiring people to share!
  */
+use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
+
 /**
  * An interface for the lazy loading strategies.
  */
 interface LoadingStrategyInterface {
 
+    /**
+     * @param QueryResultInterface $queryResult
+     * @return void
+     */
+    public function setParentQueryResult(QueryResultInterface $queryResult);
 }
