@@ -192,7 +192,7 @@ abstract class AbstractDomainObject implements DomainObjectInterface, \TYPO3\CMS
 	 * Register an properties's clean state, e.g. after it has been reconstituted
 	 * from the database.
 	 *
-	 * @param string $propertyName The name of the property to be memorized. If omittet all persistable properties are memorized.
+	 * @param string $propertyName The name of the property to be memorized. If omitted all persistable properties are memorized.
 	 * @return void
 	 */
 	public function _memorizePropertyCleanState($propertyName) {

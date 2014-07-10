@@ -370,6 +370,14 @@ class ReflectionService implements \TYPO3\CMS\Core\SingletonInterface {
 		return isset($this->propertyTagsValues[$className][$propertyName][$tag]);
 	}
 
+	public function getShortName($className) {
+		if (!isset($this->reflectedClassNames[$className])) {
+			$this->reflectClass($className);
+		}
+
+		return $this->reflectedClassNames[$className]->getShortName();
+	}
+
 	/**
 	 * Reflects the given class and stores the results in this service's properties.
 	 *

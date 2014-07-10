@@ -32,6 +32,12 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $identityMap;
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxyFactory
+	 * @inject
+	 */
+	protected $lazyProxyFactory;
+
+	/**
 	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
 	 * @inject
 	 */
@@ -245,7 +251,8 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			if ($propertyValue !== NULL) {
 				$object->_setProperty($propertyName, $propertyValue);
 
-				if ($propertyValue instanceof Persistence\Generic\LazyLoadingProxy) {
+				if ($propertyValue instanceof Persistence\Generic\LazyLoadingProxy
+				|| $propertyValue instanceof Persistence\Generic\LoadingStrategyInterface) {
 					$lazyObjectMap[$propertyName][] = $propertyValue;
 				}
 			}
@@ -307,13 +314,12 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				if (empty($fieldValue)) {
 					$result = NULL;
 				} else {
-					$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyLoadingProxy', $parentObject, $propertyName, $fieldValue);
+					$result = $this->lazyProxyFactory->getProxy($propertyMetaData['type'], $parentObject, $propertyName, $fieldValue);
 				}
 			}
 		} else {
 			$result = $this->fetchRelatedEager($parentObject, $propertyName, $fieldValue);
 		}
-
 		return $result;
 	}
 
@@ -496,11 +502,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			$propertyValue = $result;
 		} else {
 			$propertyMetaData = $this->reflectionService->getClassSchema(get_class($parentObject))->getProperty($propertyName);
-			if (in_array(
-				$propertyMetaData['type'],
-				array('array', 'ArrayObject', 'SplObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage', 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage'),
-				TRUE
-			)) {
+			if (in_array($propertyMetaData['type'], array('array', 'ArrayObject', 'SplObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage', 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage'), TRUE)) {
 				$objects = array();
 				foreach ($result as $value) {
 					$objects[] = $value;
@@ -524,7 +526,6 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		}
-
 		return $propertyValue;
 	}
 

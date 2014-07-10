@@ -104,7 +104,7 @@ class QueryResult implements QueryResultInterface {
 			$query->setLimit(1);
 			list($queryResult, $this->lazyObjectMap) = $this->dataMapper->map($query->getType(), $this->persistenceManager->getObjectDataByQuery($query));
 
-			foreach ($this->lazyObjectMap as $propertyName => $lazyObjects) {
+			foreach ($this->lazyObjectMap as $_ => $lazyObjects) {
 				foreach ($lazyObjects as $lazyObject) {
 					$lazyObject->setParentQueryResult($this);
 				}
