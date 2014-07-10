@@ -245,7 +245,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			if ($propertyValue !== NULL) {
 				$object->_setProperty($propertyName, $propertyValue);
 
-				if ($propertyValue instanceof Persistence\Generic\LoadingStrategyInterface) {
+				if ($propertyValue instanceof Persistence\Generic\LazyLoadingProxy) {
 					$lazyObjectMap[$propertyName][] = $propertyValue;
 				}
 			}
@@ -325,7 +325,8 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param mixed $fieldValue The raw field value.
 	 * @return mixed
 	 */
-	protected function fetchRelatedEager(DomainObjectInterface $parentObject, $propertyName, $fieldValue = '') {
+	public function fetchRelatedEager(DomainObjectInterface $parentObject, $propertyName, $fieldValue = '') {
+		// @todo make this protected again!
 		return $fieldValue === '' ? $this->getEmptyRelationValue($parentObject, $propertyName) : $this->getNonEmptyRelationValue($parentObject, $propertyName, $fieldValue);
 	}
 

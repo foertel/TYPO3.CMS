@@ -317,4 +317,22 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	public function setParentQueryResult(QueryResultInterface $parentQueryResult) {
 		$this->parentQueryResult = $parentQueryResult;
 	}
+
+	/**
+	 * Returns the parentObject so we can populate the proxy.
+	 *
+	 * @return object
+	 */
+	public function _getParentObject() {
+		return $this->parentObject;
+	}
+
+	/**
+	 * Returns the fieldValue so we can fetch multiple LazyObjects in one query.
+	 *
+	 * @return mixed
+	 */
+	public function _getFieldValue() {
+		return $this->fieldValue;
+	}
 }

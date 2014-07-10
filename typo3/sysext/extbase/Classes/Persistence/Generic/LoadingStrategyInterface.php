@@ -20,9 +20,23 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
  */
 interface LoadingStrategyInterface {
 
-    /**
-     * @param QueryResultInterface $queryResult
-     * @return void
-     */
-    public function setParentQueryResult(QueryResultInterface $queryResult);
+	/**
+	 * @param QueryResultInterface $queryResult
+	 * @return void
+	 */
+	public function setParentQueryResult(QueryResultInterface $queryResult);
+
+	/**
+	 * Returns the parentObject so we can populate the proxy.
+	 *
+	 * @return object
+	 */
+	public function _getParentObject();
+
+	/**
+	* Returns the fieldValue so we can fetch multiple LazyObjects in one query.
+	*
+	* @return mixed
+	*/
+	public function _getFieldValue();
 }

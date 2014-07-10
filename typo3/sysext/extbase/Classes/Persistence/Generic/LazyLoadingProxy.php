@@ -76,15 +76,10 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 		// usually that does not happen, but if the proxy is held from outside
 		// it's parent... the result would be weird.
 		if ($this->parentObject->_getProperty($this->propertyName) instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
-			$objects = $this->dataMapper->fetchRelated($this->parentObject, $this->propertyName, $this->fieldValue, FALSE, FALSE);
-			$propertyValue = $this->dataMapper->mapResultToPropertyValue($this->parentObject, $this->propertyName, $objects);
-			$this->parentObject->_setProperty($this->propertyName, $propertyValue);
-			$this->parentObject->_memorizeCleanState($this->propertyName);
-
-			return $propertyValue;
-		} else {
-			return $this->parentObject->_getProperty($this->propertyName);
+			$this->parentQueryResult->fetchLazyObjects($this->propertyName);
 		}
+
+		return $this->parentObject->_getProperty($this->propertyName);
 	}
 
 	/**
@@ -218,5 +213,23 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function setParentQueryResult(QueryResultInterface $parentQueryResult) {
 		$this->parentQueryResult = $parentQueryResult;
+	}
+
+	/**
+	 * Returns the parentObject so we can populate the proxy.
+	 *
+	 * @return object
+	 */
+	public function _getParentObject() {
+		return $this->parentObject;
+	}
+
+	/**
+	 * Returns the fieldValue so we can fetch multiple LazyObjects in one query.
+	 *
+	 * @return mixed
+	 */
+	public function _getFieldValue() {
+		return $this->fieldValue;
 	}
 }

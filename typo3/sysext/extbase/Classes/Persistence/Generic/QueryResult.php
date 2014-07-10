@@ -13,6 +13,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  * The TYPO3 project - inspiring people to share!
  */
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 /**
@@ -101,7 +102,13 @@ class QueryResult implements QueryResultInterface {
 		} else {
 			$query = $this->getQuery();
 			$query->setLimit(1);
-			list($queryResult) = $this->dataMapper->map($query->getType(), $this->persistenceManager->getObjectDataByQuery($query));
+			list($queryResult, $this->lazyObjectMap) = $this->dataMapper->map($query->getType(), $this->persistenceManager->getObjectDataByQuery($query));
+
+			foreach ($this->lazyObjectMap as $propertyName => $lazyObjects) {
+				foreach ($lazyObjects as $lazyObject) {
+					$lazyObject->setParentQueryResult($this);
+				}
+			}
 		}
 		$firstResult = current($queryResult);
 		if ($firstResult === FALSE) {
@@ -249,5 +256,33 @@ class QueryResult implements QueryResultInterface {
 	 */
 	public function __sleep() {
 		return array('query');
+	}
+
+	/**
+	 * fetches and builds all lazyObjects of a certain propertyName with one query.
+	 *
+	 * @param string $propertyName
+	 * @return void
+	 * @todo move this somewhere meaningful!
+	 */
+	public function fetchLazyObjects($propertyName) {
+		// @todo yeah, about that .. do not dataMap ... get them yourself!
+		/** @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper */
+		$dataMapper = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper');
+		$uidsToFetch = array();
+
+		foreach ($this->lazyObjectMap[$propertyName] as $lazyObject) {
+			$uidsToFetch[$lazyObject->_getFieldValue()] = $lazyObject->_getParentObject();
+		}
+
+		// @todo get all objects in one query!
+		foreach ($uidsToFetch as $uidToFetch => $parentObject) {
+			$realObject = $dataMapper->fetchRelatedEager($parentObject, $propertyName, $uidToFetch);
+
+			$propertyValue = $dataMapper->mapResultToPropertyValue($parentObject, $propertyName, $realObject);
+
+			$parentObject->_setProperty($propertyName, $propertyValue);
+			$parentObject->_memorizeCleanState($propertyName);
+		}
 	}
 }
