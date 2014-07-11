@@ -13,7 +13,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  * The TYPO3 project - inspiring people to share!
  */
-use ReflectionClass;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -24,6 +23,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @author  Stefano Kowalke <blueduck@gmx.net>
  */
 class LazyLoadingProxyFactory {
+
+	/**
+	 * @var \TYPO3\CMS\Core\Cache\CacheManager
+	 * @inject
+	 */
+	protected $cacheManager;
 
 	/**
 	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
@@ -45,7 +50,7 @@ class LazyLoadingProxyFactory {
 
 	/**
 	 * The storage of the proxies
-	 * @var mixed
+	 * @var \TYPO3\CMS\Core\Cache\Frontend\PhpFrontend
 	 */
 	private $proxyStorage;
 
@@ -61,17 +66,18 @@ class LazyLoadingProxyFactory {
 	 * @return void
 	 */
 	public function initializeObject() {
-		$this->proxyStorage = 'typo3temp';
+		$this->proxyStorage = $this->cacheManager->getCache('extbase_lazyproxyobject_storage');
 	}
 
 	/**
-	 * @param $className
-	 * @param $parentObject
-	 * @param $propertyName
-	 * @param $fieldValue
+	 * Returns a lazy proxy from the type of the given object.
 	 *
-	 * @return
-	 * @internal param $identifier
+	 * @param string $className The classname or object to create the proxy from
+	 * @param string $parentObject The parent object
+	 * @param string $propertyName The property
+	 * @param string $fieldValue The value of the field
+	 *
+	 * @return object
 	 */
 	public function getProxy($className, $parentObject, $propertyName, $fieldValue) {
 		$this->classReflection = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Reflection\\ClassReflection', $className);
@@ -81,21 +87,24 @@ class LazyLoadingProxyFactory {
 		$proxyClassName = $shortName . 'LazyProxy';
 		$fqn = $this->proxyNamespace . '\\' . $proxyClassName;
 
-		$proxyFileName = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'typo3temp' . DIRECTORY_SEPARATOR . $proxyClassName . '.php';
-		$this->generateProxyClass($className, $proxyClassName, $proxyFileName);
+		if (!$this->proxyStorage->has($proxyClassName)) {
+			$this->generateProxyClass($className, $proxyClassName);
+		}
 
-		require_once $proxyFileName;
+		$this->proxyStorage->requireOnce($proxyClassName);
 
 		return new $fqn($parentObject, $propertyName, $fieldValue);
 
 	}
 
 	/**
+	 * Generates the php proxy file.
+	 * Will be saved into cache
+	 *
 	 * @param $className
 	 * @param $proxyClassName
-	 * @param $fileName
 	 */
-	protected function generateProxyClass($className, $proxyClassName, $fileName) {
+	protected function generateProxyClass($className, $proxyClassName) {
 		$placeholders = array(
 			'<namespace>',
 			'<proxyClassName>',
@@ -115,15 +124,20 @@ class LazyLoadingProxyFactory {
 		);
 
 		$file = str_replace($placeholders, $replacements, $proxyTemplate);
-
-		file_put_contents($fileName, $file);
+		$this->proxyStorage->set($proxyClassName, $file);
 	}
 
+	/**
+	 * Returns the proxy file template
+	 *
+	 * @return string
+	 */
 	private function getProxyTemplate() {
 		return GeneralUtility::getUrl(ExtensionManagementUtility::extPath('extbase') . '/Resources/Private/LazyProxyTemplate.txt');
 	}
 
 	/**
+	 * Generates the methods for the proxy object
 	 *
 	 * @return string $methods
 	 */
@@ -178,7 +192,8 @@ class LazyLoadingProxyFactory {
 				}
 
 				$methods .= $parameterString . ') {' . PHP_EOL;
-				if (substr_compare($methodName, '__', 0, 1) !== 0) {
+				if (!(strcasecmp($methodName, '_setClone') === 0
+					|| strcasecmp($methodName, '__clone') === 0)) {
 					$methods .= '    $this->parentQueryResult->fetchLazyObjects($this->propertyName);' . PHP_EOL;
 				}
 				$methods .= '    return parent::' . $method->getName() . '(' . $argumentString . ');';
