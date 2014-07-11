@@ -32,6 +32,11 @@ class LazyLoadingProxyFactory {
 	protected $reflectionService;
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Reflection\ClassReflection
+	 */
+	protected $classReflection;
+
+	/**
 	 * The namespace of the proxies
 	 *
 	 * @var string
@@ -45,9 +50,10 @@ class LazyLoadingProxyFactory {
 	private $proxyStorage;
 
 	/**
-	 * @var \ReflectionClass $classReflection
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
+	 * @inject
 	 */
-	private $classReflection;
+	protected $objectManager;
 
 	/**
 	 * Lifecycle method
@@ -68,7 +74,7 @@ class LazyLoadingProxyFactory {
 	 * @internal param $identifier
 	 */
 	public function getProxy($className, $parentObject, $propertyName, $fieldValue) {
-		$this->classReflection = $this->reflectionService->getClassSchema($className);
+		$this->classReflection = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Reflection\\ClassReflection', $className);
 		$shortName = $this->classReflection->getShortName();
 		$this->proxyNamespace = $this->classReflection->getNamespaceName();
 
