@@ -18,6 +18,8 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 /**
  * A proxy that can replace any object and replaces itself in it's parent on
  * first access (call, get, set, isset, unset).
+ *
+ * @deprecated since 6.2 will be removed two versions later
  */
 class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Generic\LoadingStrategyInterface {
 

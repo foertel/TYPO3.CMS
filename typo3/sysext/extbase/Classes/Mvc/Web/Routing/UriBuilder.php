@@ -696,13 +696,7 @@ class UriBuilder {
 	 */
 	protected function convertDomainObjectsToIdentityArrays(array $arguments) {
 		foreach ($arguments as $argumentKey => $argumentValue) {
-			// if we have a LazyLoadingProxy here, make sure to get the real instance for further processing
-			if ($argumentValue instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
-				$argumentValue = $argumentValue->_loadRealInstance();
-				// also update the value in the arguments array, because the lazyLoaded object could be
-				// hidden and thus the $argumentValue would be NULL.
-				$arguments[$argumentKey] = $argumentValue;
-			}
+			$arguments[$argumentKey] = $argumentValue;
 			if ($argumentValue instanceof \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject) {
 				if ($argumentValue->getUid() !== NULL) {
 					$arguments[$argumentKey] = $argumentValue->getUid();

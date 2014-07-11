@@ -208,13 +208,11 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @return string The identifier for the object if it is known, or NULL
 	 */
 	public function getIdentifierByObject($object) {
-		if ($object instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
-			$object = $object->_loadRealInstance();
-			if (!is_object($object)) {
-				return NULL;
-			}
+		if (!is_object($object)) {
+			return NULL;
+		} else {
+			return $this->session->getIdentifierByObject($object);
 		}
-		return $this->session->getIdentifierByObject($object);
 	}
 
 	/**
@@ -404,7 +402,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 	 * @return boolean
 	 */
 	protected function propertyValueIsLazyLoaded($propertyValue) {
-		if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
+		if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LoadingStrategyInterface) {
 			return TRUE;
 		}
 		if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyObjectStorage) {
@@ -412,6 +410,7 @@ class Backend implements \TYPO3\CMS\Extbase\Persistence\Generic\BackendInterface
 				return TRUE;
 			}
 		}
+
 		return FALSE;
 	}
 

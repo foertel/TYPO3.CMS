@@ -16,6 +16,12 @@ if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations
 		'groups' => array('system')
 	);
 }
+//if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_lazyobject_storage']['fontend'])) {
+//	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_lazyproxyobject_storage']['frontend'] = 't3lib_cache_frontend_PhpFrontend';
+//	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_lazyproxyobject_storage']['frontend'] = array(
+//		'groups' => array('system')
+//	);
+//}
 
 // We set the default implementation for Storage Backend & Query Settings in Backend and Frontend.
 // The code below is NO PUBLIC API!

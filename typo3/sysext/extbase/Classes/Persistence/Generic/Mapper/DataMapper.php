@@ -251,8 +251,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			if ($propertyValue !== NULL) {
 				$object->_setProperty($propertyName, $propertyValue);
 
-				if ($propertyValue instanceof Persistence\Generic\LazyLoadingProxy
-				|| $propertyValue instanceof Persistence\Generic\LoadingStrategyInterface) {
+				if ($propertyValue instanceof Persistence\Generic\LoadingStrategyInterface) {
 					$lazyObjectMap[$propertyName][] = $propertyValue;
 				}
 			}
@@ -648,9 +647,6 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	public function getPlainValue($input, $columnMap = NULL, $parseStringValueCallback = NULL, array $parseStringValueCallbackParameters = array()) {
 		if ($input === NULL) {
 			return 'NULL';
-		}
-		if ($input instanceof Persistence\Generic\LazyLoadingProxy) {
-			$input = $input->_loadRealInstance();
 		}
 
 		if (is_bool($input)) {

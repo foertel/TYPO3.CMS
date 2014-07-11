@@ -112,9 +112,6 @@ class Category extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity {
 	 * @api
 	 */
 	public function getParent() {
-		if ($this->parent instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
-			$this->parent->_loadRealInstance();
-		}
 		return $this->parent;
 	}
 

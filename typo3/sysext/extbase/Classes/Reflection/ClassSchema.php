@@ -18,20 +18,13 @@ namespace TYPO3\CMS\Extbase\Reflection;
  *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  */
-class ClassSchema {
+class ClassSchema extends \ReflectionClass {
 
 	/**
 	 * Available model types
 	 */
 	const MODELTYPE_ENTITY = 1;
 	const MODELTYPE_VALUEOBJECT = 2;
-
-	/**
-	 * Name of the class this schema is referring to
-	 *
-	 * @var string
-	 */
-	protected $className;
 
 	/**
 	 * Model type of the class this schema is referring to
@@ -80,7 +73,7 @@ class ClassSchema {
 	 * @param string $className Name of the class this schema is referring to
 	 */
 	public function __construct($className) {
-		$this->className = $className;
+		parent::__construct($className);
 	}
 
 	/**
@@ -89,7 +82,11 @@ class ClassSchema {
 	 * @return string The class name
 	 */
 	public function getClassName() {
-		return $this->className;
+		return parent::getName();
+	}
+
+	public function getShortName() {
+		return parent::getShortName();
 	}
 
 	/**

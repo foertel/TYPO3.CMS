@@ -36,7 +36,7 @@ class LazyLoadingProxyFactory {
 	 *
 	 * @var string
 	 */
-	private $proxyNamespace;
+	private $proxyNamespace = '';
 
 	/**
 	 * The storage of the proxies
@@ -56,7 +56,6 @@ class LazyLoadingProxyFactory {
 	 */
 	public function initializeObject() {
 		$this->proxyStorage = 'typo3temp';
-		$this->proxyNamespace = 'TYPO3\CMS\Extbase\Domain\Model\Proxy';
 	}
 
 	/**
@@ -66,11 +65,12 @@ class LazyLoadingProxyFactory {
 	 * @param $fieldValue
 	 *
 	 * @return
-	 * @internal param $identifer
+	 * @internal param $identifier
 	 */
 	public function getProxy($className, $parentObject, $propertyName, $fieldValue) {
-		$this->classReflection = new ReflectionClass($className);
+		$this->classReflection = $this->reflectionService->getClassSchema($className);
 		$shortName = $this->classReflection->getShortName();
+		$this->proxyNamespace = $this->classReflection->getNamespaceName();
 
 		$proxyClassName = $shortName . 'LazyProxy';
 		$fqn = $this->proxyNamespace . '\\' . $proxyClassName;
