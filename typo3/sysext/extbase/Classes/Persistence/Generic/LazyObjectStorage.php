@@ -99,6 +99,8 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	protected function initialize() {
 		if (!$this->isInitialized) {
 			$this->isInitialized = TRUE;
+			// @todo lazyObjectStorage implementieren!
+			$this->parentQueryResult->fetchLazyObjects($this->propertyName);
 			$objects = $this->dataMapper->fetchRelated($this->parentObject, $this->propertyName, $this->fieldValue, FALSE);
 			foreach ($objects as $object) {
 				parent::attach($object);

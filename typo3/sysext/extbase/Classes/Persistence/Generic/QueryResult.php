@@ -54,6 +54,12 @@ class QueryResult implements QueryResultInterface {
 	protected $lazyObjectMap = array();
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Service\LazyLoadingService
+	 * @inject
+	 */
+	protected $lazyLoadingService;
+
+	/**
 	 * Constructor
 	 *
 	 * @param \TYPO3\CMS\Extbase\Persistence\QueryInterface $query
@@ -263,26 +269,8 @@ class QueryResult implements QueryResultInterface {
 	 *
 	 * @param string $propertyName
 	 * @return void
-	 * @todo move this somewhere meaningful!
 	 */
 	public function fetchLazyObjects($propertyName) {
-		// @todo yeah, about that .. do not dataMap ... get them yourself!
-		/** @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper $dataMapper */
-		$dataMapper = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper');
-		$uidsToFetch = array();
-
-		foreach ($this->lazyObjectMap[$propertyName] as $lazyObject) {
-			$uidsToFetch[$lazyObject->_getFieldValue()] = $lazyObject->_getParentObject();
-		}
-
-		// @todo get all objects in one query!
-		foreach ($uidsToFetch as $uidToFetch => $parentObject) {
-			$realObject = $dataMapper->fetchRelatedEager($parentObject, $propertyName, $uidToFetch);
-
-			$propertyValue = $dataMapper->mapResultToPropertyValue($parentObject, $propertyName, $realObject);
-
-			$parentObject->_setProperty($propertyName, $propertyValue);
-			$parentObject->_memorizeCleanState($propertyName);
-		}
+		$this->lazyLoadingService->populateLazyObjects($this->lazyObjectMap[$propertyName], $propertyName);
 	}
 }

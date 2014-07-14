@@ -248,6 +248,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 						}
 				}
 			}
+
 			if ($propertyValue !== NULL) {
 				$object->_setProperty($propertyName, $propertyValue);
 
