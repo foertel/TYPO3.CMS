@@ -14,7 +14,6 @@ namespace TYPO3\CMS\Extbase\Service;
  * The TYPO3 project - inspiring people to share!
  */
 use TYPO3\CMS\Extbase\Persistence\Generic\LazyObjectStorage;
-use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Service for resolving lazy objects
@@ -44,8 +43,7 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 
 			foreach ($lazyObjects as $lazyObject) {
 				if ($lazyObject instanceof LazyObjectStorage) {
-					DebuggerUtility::var_dump($lazyObject);
-					die();
+					// @todo implement loading of lazyObjects
 				}
 				if (is_array($lazyObject->_getFieldValue())) {
 					foreach ($lazyObject->_getFieldValue() as $singleFieldValue) {
@@ -57,6 +55,7 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 			}
 
 			$modelClassName = preg_replace('/LazyProxy$/', '', get_class($lazyObject));
+			$nsSeparator = strpos($modelClassName, '\\') !== FALSE ? '\\\\' : '_';
 			$repositoryClassName = preg_replace(
 				'/' . $nsSeparator . 'Model' . $nsSeparator . '(?!.*' . $nsSeparator . 'Model' . $nsSeparator . ')/',
 				$nsSeparator . 'Repository' . $nsSeparator,
