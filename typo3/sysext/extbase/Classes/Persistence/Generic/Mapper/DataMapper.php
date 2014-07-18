@@ -331,8 +331,7 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param mixed $fieldValue The raw field value.
 	 * @return mixed
 	 */
-	public function fetchRelatedEager(DomainObjectInterface $parentObject, $propertyName, $fieldValue = '') {
-		// @todo make this protected again!
+	protected function fetchRelatedEager(DomainObjectInterface $parentObject, $propertyName, $fieldValue = '') {
 		return $fieldValue === '' ? $this->getEmptyRelationValue($parentObject, $propertyName) : $this->getNonEmptyRelationValue($parentObject, $propertyName, $fieldValue);
 	}
 

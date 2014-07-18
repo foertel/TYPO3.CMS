@@ -59,14 +59,14 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	protected $fieldValue;
 
 	/**
-	 * @var bool
-	 */
-	protected $isInitialized = FALSE;
-
-	/**
 	 * @var QueryResultInterface
 	 */
 	protected $parentQueryResult;
+
+	/**
+	 * @var bool
+	 */
+	protected $isInitialized = FALSE;
 
 	/**
 	 * Returns the state of the initialization
@@ -99,8 +99,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	protected function initialize() {
 		if (!$this->isInitialized) {
 			$this->isInitialized = TRUE;
-			// @todo lazyObjectStorage implementieren!
-			$this->parentQueryResult->fetchLazyObjects($this->propertyName);
 			$objects = $this->dataMapper->fetchRelated($this->parentObject, $this->propertyName, $this->fieldValue, FALSE);
 			foreach ($objects as $object) {
 				parent::attach($object);
@@ -149,7 +147,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function contains($object) {
 		$this->initialize();
-
 		return parent::contains($object);
 	}
 
@@ -171,7 +168,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 		if (is_null($numberOfElements)) {
 			throw new \TYPO3\CMS\Extbase\Persistence\Generic\Exception('The number of elements could not be determined.', 1252514486);
 		}
-
 		return $numberOfElements;
 	}
 
@@ -182,7 +178,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function current() {
 		$this->initialize();
-
 		return parent::current();
 	}
 
@@ -203,7 +198,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function key() {
 		$this->initialize();
-
 		return parent::key();
 	}
 
@@ -223,7 +217,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function offsetExists($object) {
 		$this->initialize();
-
 		return parent::offsetExists($object);
 	}
 
@@ -235,7 +228,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function offsetGet($object) {
 		$this->initialize();
-
 		return parent::offsetGet($object);
 	}
 
@@ -287,7 +279,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function valid() {
 		$this->initialize();
-
 		return parent::valid();
 	}
 
@@ -298,7 +289,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function toArray() {
 		$this->initialize();
-
 		return parent::toArray();
 	}
 
@@ -308,7 +298,6 @@ class LazyObjectStorage extends \TYPO3\CMS\Extbase\Persistence\ObjectStorage imp
 	 */
 	public function getPosition($object) {
 		$this->initialize();
-
 		return parent::getPosition($object);
 	}
 

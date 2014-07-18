@@ -39,22 +39,7 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function populateLazyObjects(array $lazyObjects = array(), $propertyName) {
 		if (!empty($lazyObjects)) {
-			$uidsToFetch = array();
-
-			foreach ($lazyObjects as $lazyObject) {
-				if ($lazyObject instanceof LazyObjectStorage) {
-					// @todo implement loading of lazyObjects
-				}
-				if (is_array($lazyObject->_getFieldValue())) {
-					foreach ($lazyObject->_getFieldValue() as $singleFieldValue) {
-						$uidsToFetch[$singleFieldValue][] = $lazyObject->_getParentObject();
-					}
-				} else {
-					$uidsToFetch[$lazyObject->_getFieldValue()][] = $lazyObject->_getParentObject();
-				}
-			}
-
-			$modelClassName = preg_replace('/LazyProxy$/', '', get_class($lazyObject));
+			$modelClassName = preg_replace('/LazyProxy$/', '', get_class(reset($lazyObjects)));
 			$nsSeparator = strpos($modelClassName, '\\') !== FALSE ? '\\\\' : '_';
 			$repositoryClassName = preg_replace(
 				'/' . $nsSeparator . 'Model' . $nsSeparator . '(?!.*' . $nsSeparator . 'Model' . $nsSeparator . ')/',
@@ -68,15 +53,21 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 				$repository = $this->objectManager->get('TYPO3\CMS\Extbase\Persistence\GenericRepository', $this->objectManager, $modelClassName);
 			}
 
+			$uidsToFetch = array();
+
+			foreach ($lazyObjects as $lazyObject) {
+				// @todo check for CSV *uarg* and trimExplode
+				$uidsToFetch[$lazyObject->_getFieldValue()][] = $lazyObject->_getParentObject();
+			}
+
+
+
 			$query = $repository->createQuery();
 			$query->getQuerySettings()->setRespectStoragePage(FALSE);
 			$query->getQuerySettings()->setRespectSysLanguage(FALSE);
 			$fetchedObjects = $query->matching($query->in('uid', array_keys($uidsToFetch)))->execute();
 
 			foreach ($fetchedObjects as $fetchedObject) {
-
-				// $object = $repository->findOneByUid($uidToFetch)->getFirst();
-
 				foreach ($uidsToFetch[$fetchedObject->getUid()] as $parentObject) {
 					$parentObject->_setProperty($propertyName, $fetchedObject);
 					$parentObject->_memorizeCleanState($propertyName);
