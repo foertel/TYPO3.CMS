@@ -52,6 +52,14 @@ class GenericRepository implements RepositoryInterface {
 	protected $defaultQuerySettings = NULL;
 
 	/**
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Session
+	 * @deprecated since 6.1 will be removed two versions later, use the persistence manager instead
+	 * @inject
+	 */
+	protected $session;
+
+
+	/**
 	 * Constructs a new Repository
 	 *
 	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
