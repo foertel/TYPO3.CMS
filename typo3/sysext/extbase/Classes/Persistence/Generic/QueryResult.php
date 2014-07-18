@@ -13,7 +13,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  * The TYPO3 project - inspiring people to share!
  */
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 /**
@@ -75,9 +74,12 @@ class QueryResult implements QueryResultInterface {
 	 */
 	protected function initialize() {
 		if (!is_array($this->queryResult)) {
-			list($this->queryResult, $this->lazyObjectMap) = $this->dataMapper->map($this->query->getType(), $this->persistenceManager->getObjectDataByQuery($this->query));
+			list($this->queryResult, $this->lazyObjectMap) = $this->dataMapper->map(
+				$this->query->getType(),
+				$this->persistenceManager->getObjectDataByQuery($this->query)
+			);
 
-			foreach ($this->lazyObjectMap as $propertyName => $lazyObjects) {
+			foreach ($this->lazyObjectMap as $_ => $lazyObjects) {
 				foreach ($lazyObjects as $lazyObject) {
 					$lazyObject->setParentQueryResult($this);
 				}
@@ -108,7 +110,10 @@ class QueryResult implements QueryResultInterface {
 		} else {
 			$query = $this->getQuery();
 			$query->setLimit(1);
-			list($queryResult, $this->lazyObjectMap) = $this->dataMapper->map($query->getType(), $this->persistenceManager->getObjectDataByQuery($query));
+			list($queryResult, $this->lazyObjectMap) = $this->dataMapper->map(
+				$query->getType(),
+				$this->persistenceManager->getObjectDataByQuery($query)
+			);
 
 			foreach ($this->lazyObjectMap as $_ => $lazyObjects) {
 				foreach ($lazyObjects as $lazyObject) {
@@ -265,7 +270,7 @@ class QueryResult implements QueryResultInterface {
 	}
 
 	/**
-	 * fetches and builds all lazyObjects of a certain propertyName with one query.
+	 * Fetches and builds all lazyObjects of a certain propertyName with one query.
 	 *
 	 * @param string $propertyName
 	 * @return void

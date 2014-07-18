@@ -145,11 +145,11 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	protected function mapSingleRow($className, array $row) {
 		$lazyObjectMap = array();
 
-		if ($this->identityMap->hasIdentifier($row['uid'], $className)) {
-			$object = $this->identityMap->getObjectByIdentifier($row['uid'], $className);
+		if ($this->persistenceSession->hasIdentifier($row['uid'], $className)) {
+			$object = $this->persistenceSession->getObjectByIdentifier($row['uid'], $className);
 		} else {
 			$object = $this->createEmptyObject($className);
-			$this->identityMap->registerObject($object, $row['uid']);
+			$this->persistenceSession->registerObject($object, $row['uid']);
 			$lazyObjectMap = $this->thawProperties($object, $row);
 			$object->_memorizeCleanState();
 			$this->persistenceSession->registerReconstitutedEntity($object);

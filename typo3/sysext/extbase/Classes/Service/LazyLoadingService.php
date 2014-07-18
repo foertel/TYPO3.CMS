@@ -13,8 +13,6 @@ namespace TYPO3\CMS\Extbase\Service;
  *
  * The TYPO3 project - inspiring people to share!
  */
-use TYPO3\CMS\Extbase\Persistence\Generic\LazyObjectStorage;
-
 /**
  * Service for resolving lazy objects
  */
@@ -33,9 +31,13 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 	protected $objectManager;
 
 	/**
+	 * Resolves the lazy objects with their real objects
+	 *
 	 * @param array $lazyObjects
-	 * @param $propertyName
+	 * @param string $propertyName
+	 *
 	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Exception
+	 * @return void
 	 */
 	public function populateLazyObjects(array $lazyObjects = array(), $propertyName) {
 		if (!empty($lazyObjects)) {
@@ -48,6 +50,7 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 			);
 
 			if (class_exists($repositoryClassName)) {
+				/** @var \TYPO3\CMS\Extbase\Persistence\RepositoryInterface $repository */
 				$repository = $this->objectManager->get($repositoryClassName);
 			} else {
 				$repository = $this->objectManager->get('TYPO3\CMS\Extbase\Persistence\GenericRepository', $this->objectManager, $modelClassName);
@@ -72,7 +75,6 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 					$parentObject->_setProperty($propertyName, $fetchedObject);
 					$parentObject->_memorizeCleanState($propertyName);
 				}
-
 			}
 		}
 	}

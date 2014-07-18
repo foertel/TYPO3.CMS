@@ -13,7 +13,6 @@ namespace TYPO3\CMS\Extbase\Persistence;
  *
  * The TYPO3 project - inspiring people to share!
  */
-use TYPO3\CMS\Core\Resource\AbstractRepository;
 
 /**
  * The base repository - will usually be extended by a more concrete repository.
@@ -31,6 +30,13 @@ class Repository extends GenericRepository implements \TYPO3\CMS\Core\SingletonI
 		parent::__construct($objectManager);
 
 		$nsSeparator = strpos($this->getRepositoryClassName(), '\\') !== FALSE ? '\\\\' : '_';
-		$this->objectType = preg_replace(array('/' . $nsSeparator . 'Repository' . $nsSeparator . '(?!.*' . $nsSeparator . 'Repository' . $nsSeparator . ')/', '/Repository$/'), array($nsSeparator . 'Model' . $nsSeparator, ''), $this->getRepositoryClassName());
+		$this->objectType = preg_replace(
+			array(
+				'/' . $nsSeparator . 'Repository' . $nsSeparator . '(?!.*' . $nsSeparator . 'Repository' . $nsSeparator . ')/',
+				'/Repository$/'
+			),
+			array($nsSeparator . 'Model' . $nsSeparator, ''),
+			$this->getRepositoryClassName()
+		);
 	}
 }
