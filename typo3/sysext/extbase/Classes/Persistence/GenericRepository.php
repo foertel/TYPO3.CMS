@@ -166,17 +166,6 @@ class GenericRepository implements RepositoryInterface {
 	/**
 	 * Finds an object matching the given identifier.
 	 *
-	 * @param integer $uid The identifier of the object to find
-	 * @return object The matching object if found, otherwise NULL
-	 * @api
-	 */
-	public function findByUid($uid) {
-		return $this->findByIdentifier($uid);
-	}
-
-	/**
-	 * Finds an object matching the given identifier.
-	 *
 	 * @param mixed $identifier The identifier of the object to find
 	 * @return object The matching object if found, otherwise NULL
 	 * @api
@@ -197,15 +186,20 @@ class GenericRepository implements RepositoryInterface {
 		 * respecting their query settings from 6.1 + 1 on.
 		 */
 		if ($this->session->hasIdentifier($identifier, $this->objectType)) {
-			$object = $this->session->getObjectByIdentifier($identifier, $this->objectType);
+			$result = $this->session->getObjectByIdentifier($identifier, $this->objectType);
 		} else {
 			$query = $this->createQuery();
 			$query->getQuerySettings()->setRespectStoragePage(FALSE);
 			$query->getQuerySettings()->setRespectSysLanguage(FALSE);
-			$object = $query->matching($query->equals('uid', $identifier))->execute()->getFirst();
+
+			if (is_array($identifier)) {
+				$result = $query->matching($query->in('uid', $identifier))->execute();
+			} else {
+				$result = $query->matching($query->equals('uid', $identifier))->execute()->getFirst();
+			}
 		}
 
-		return $object;
+		return $result;
 	}
 
 	/**

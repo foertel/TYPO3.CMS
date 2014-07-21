@@ -63,12 +63,7 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 				$uidsToFetch[$lazyObject->_getFieldValue()][] = $lazyObject->_getParentObject();
 			}
 
-
-
-			$query = $repository->createQuery();
-			$query->getQuerySettings()->setRespectStoragePage(FALSE);
-			$query->getQuerySettings()->setRespectSysLanguage(FALSE);
-			$fetchedObjects = $query->matching($query->in('uid', array_keys($uidsToFetch)))->execute();
+			$fetchedObjects = $repository->findByIdentifier(array_keys($uidsToFetch));
 
 			foreach ($fetchedObjects as $fetchedObject) {
 				foreach ($uidsToFetch[$fetchedObject->getUid()] as $parentObject) {
