@@ -166,8 +166,13 @@ class GenericRepository implements RepositoryInterface {
 	/**
 	 * Finds an object matching the given identifier.
 	 *
-	 * @param mixed $identifier The identifier of the object to find
-	 * @return object The matching object if found, otherwise NULL
+	 * In contrast to findByUid(), which is covered by the common findBy*-magic,
+	 * this method allows you to apply individual filters for situations in which
+	 * extbase's persistence is trying to resolve objects for you. You could wish
+	 * to include records from different storagePages or languages for example.
+	 *
+	 * @param mixed $identifier one or multiple identifier(s) of the object(s) to find
+	 * @return object The matching object(s) if found, otherwise NULL
 	 * @api
 	 */
 	public function findByIdentifier($identifier) {

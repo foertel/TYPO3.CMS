@@ -18,7 +18,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class LazyLoadingProxyFactory
- * 
+ *
  * @package TYPO3\CMS\Extbase\Persistence\Generic
  * @author  Stefano Kowalke <blueduck@gmx.net>
  */
@@ -113,7 +113,7 @@ class LazyLoadingProxyFactory {
 		);
 
 		$methods = $this->generateMethods();
-		
+
 		$proxyTemplate = $this->getProxyTemplate();
 
 		$replacements = array(
