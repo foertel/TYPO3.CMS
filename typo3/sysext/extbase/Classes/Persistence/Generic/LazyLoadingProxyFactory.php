@@ -152,10 +152,6 @@ class LazyLoadingProxyFactory {
 			$methodName = $method->getName();
 
 			if ($method->isPublic() && !$method->isFinal() && !$method->isStatic()) {
-				if (strstr('set', strtolower($methodName))) {
-					continue;
-				}
-
 				$methods .= PHP_EOL . ' public function ';
 				if ($method->returnsReference()) {
 					$methods .= '&';
