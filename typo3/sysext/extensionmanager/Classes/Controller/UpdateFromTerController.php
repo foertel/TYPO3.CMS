@@ -62,7 +62,7 @@ class UpdateFromTerController extends AbstractController {
 			}
 		}
 		/** @var $repository \TYPO3\CMS\Extensionmanager\Domain\Model\Repository */
-		$repository = $this->repositoryRepository->findByUid((int)$this->settings['repositoryUid']);
+		$repository = $this->repositoryRepository->findOneByUid((int)$this->settings['repositoryUid']);
 		$this->view->assign('updated', $updated)
 				->assign('repository', $repository)
 				->assign('errorMessage', $errorMessage);

@@ -342,10 +342,17 @@ class RepositoryTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	public function findByUidReturnsResultOfGetObjectByIdentifierCall() {
 		$fakeUid = '123';
 		$object = new \stdClass();
-		$repository = $this->getMock('TYPO3\CMS\Extbase\Persistence\Repository', array('findByIdentifier'), array($this->mockObjectManager));
 		$expectedResult = $object;
+
+		$persistenceManager = $this->getMock('TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface', array('createQueryForType'));
+		$repository = $this->getAccessibleMock('TYPO3\CMS\Extbase\Persistence\Repository', array('findByIdentifier'), array($this->mockObjectManager));
+
 		$repository->expects($this->once())->method('findByIdentifier')->will($this->returnValue($object));
-		$actualResult = $repository->findByUid($fakeUid);
+
+		$repository->_set('persistenceManager', $persistenceManager);
+
+		$actualResult = $repository->findOneByUid($fakeUid);
+
 		$this->assertSame($expectedResult, $actualResult);
 	}
 

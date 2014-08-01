@@ -41,7 +41,7 @@ class WorkspaceTitleViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abstract
 			return '';
 		}
 		/** @var $workspace \TYPO3\CMS\Belog\Domain\Model\Workspace */
-		$workspace = $this->workspaceRepository->findByUid($uid);
+		$workspace = $this->workspaceRepository->findOneByUid($uid);
 		if ($workspace !== NULL) {
 			$title = $workspace->getTitle();
 		} else {

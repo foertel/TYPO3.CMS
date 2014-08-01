@@ -35,7 +35,7 @@ class UsernameViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 	 */
 	public function render($uid) {
 		/** @var $user \TYPO3\CMS\Extbase\Domain\Model\BackendUser */
-		$user = $this->backendUserRepository->findByUid($uid);
+		$user = $this->backendUserRepository->findOneByUid($uid);
 		if ($user === NULL) {
 			return '';
 		}

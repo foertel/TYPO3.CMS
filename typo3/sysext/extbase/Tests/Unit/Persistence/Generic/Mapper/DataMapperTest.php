@@ -28,12 +28,13 @@ class DataMapperTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	public function mapMapsArrayToObjectByCallingmapToObject() {
 		$rows = array(array('uid' => '1234'));
 		$object = new \stdClass();
+		$lazyObjectMap = array();
 		/** @var DataMapper|AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject $dataMapper */
 		$dataMapper = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper', array('mapSingleRow', 'getTargetType'));
-		$dataMapper->expects($this->any())->method('getTargetType')->will($this->returnArgument(1));
+		$dataMapper->expects($this->any())->method('getTargetType')->will($this->returnValue(get_class($object)));
 		$dataMapFactory = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapFactory');
 		$dataMapper->_set('dataMapFactory', $dataMapFactory);
-		$dataMapper->expects($this->once())->method('mapSingleRow')->with($rows[0])->will($this->returnValue($object));
+		$dataMapper->expects($this->once())->method('mapSingleRow')->with(get_class($object), $rows[0])->will($this->returnValue(array($object, $lazyObjectMap)));
 		$dataMapper->map(get_class($object), $rows);
 	}
 
@@ -43,11 +44,11 @@ class DataMapperTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	public function mapSingleRowReturnsObjectFromIdentityMapIfAvailable() {
 		$row = array('uid' => '1234');
 		$object = new \stdClass();
-		$identityMap = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\IdentityMap');
-		$identityMap->expects($this->once())->method('hasIdentifier')->with('1234')->will($this->returnValue(TRUE));
-		$identityMap->expects($this->once())->method('getObjectByIdentifier')->with('1234')->will($this->returnValue($object));
+		$persistenceSession = $this->getMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Session');
+		$persistenceSession->expects($this->once())->method('hasIdentifier')->with('1234')->will($this->returnValue(TRUE));
+		$persistenceSession->expects($this->once())->method('getObjectByIdentifier')->with('1234')->will($this->returnValue($object));
 		$dataMapper = $this->getAccessibleMock('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper', array('dummy'));
-		$dataMapper->_set('identityMap', $identityMap);
+		$dataMapper->_set('persistenceSession', $persistenceSession);
 		$dataMapper->_call('mapSingleRow', get_class($object), $row);
 	}
 
