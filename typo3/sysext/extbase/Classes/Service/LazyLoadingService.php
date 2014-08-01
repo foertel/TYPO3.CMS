@@ -13,6 +13,8 @@ namespace TYPO3\CMS\Extbase\Service;
  *
  * The TYPO3 project - inspiring people to share!
  */
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Service for resolving lazy objects
  */
@@ -59,14 +61,22 @@ class LazyLoadingService implements \TYPO3\CMS\Core\SingletonInterface {
 			$uidsToFetch = array();
 
 			foreach ($lazyObjects as $lazyObject) {
-				// @todo check for CSV *uarg* and trimExplode
-				$uidsToFetch[$lazyObject->_getFieldValue()][] = $lazyObject->_getParentObject();
+				/**
+				 * Deal with TYPO3's incredibly stupid comma separated lists "feature"
+				 */
+				if (strstr($lazyObject->_getFieldValue(), ',')) {
+					foreach (GeneralUtility::trimExplode(',', $lazyObject->_getFieldValue()) as $fieldValue) {
+						$uidsToFetch[$fieldValue][] = $lazyObject->_getParentObject();
+					}
+				} else {
+					$uidsToFetch[$lazyObject->_getFieldValue()][] = $lazyObject->_getParentObject();
+				}
 			}
 
 			$fetchedObjects = $repository->findByIdentifier(array_keys($uidsToFetch));
 
 			foreach ($fetchedObjects as $fetchedObject) {
-				foreach ($uidsToFetch[$fetchedObject->getUid()] as $parentObject) {
+				foreach (array_unique($uidsToFetch[$fetchedObject->getUid()]) as $parentObject) {
 					$parentObject->_setProperty($propertyName, $fetchedObject);
 					$parentObject->_memorizeCleanState($propertyName);
 				}
