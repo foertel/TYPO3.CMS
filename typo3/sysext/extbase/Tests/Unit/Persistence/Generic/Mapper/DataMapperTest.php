@@ -281,23 +281,6 @@ class DataMapperTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 * @expectedException \TYPO3\CMS\Extbase\Persistence\Generic\Exception\UnexpectedTypeException
-	 */
-	public function getPlainValueCallsGetRealInstanceOnInputIfInputIsInstanceOfLazyLoadingProxy() {
-		$dataMapper = new DataMapper();
-		$input = $this->getMock(
-			'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyLoadingProxy',
-			array(),
-			array(),
-			'',
-			FALSE
-		);
-		$input->expects($this->once())->method('_loadRealInstance')->will($this->returnValue($dataMapper));
-		$dataMapper->getPlainValue($input);
-	}
-
-	/**
-	 * @test
 	 */
 	public function getPlainValueCallsGetUidOnDomainObjectInterfaceInput() {
 		$dataMapper = new DataMapper();

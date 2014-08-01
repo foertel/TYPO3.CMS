@@ -29,20 +29,6 @@ namespace TYPO3\CMS\Extbase\Property;
 interface PropertyMappingConfigurationInterface {
 
 	/**
-	 * The behavior is as follows:
-	 *
-	 * - if a property has been explicitly forbidden using allowAllPropertiesExcept(...), it is directly rejected
-	 * - if a property has been allowed using allowProperties(...), it is directly allowed.
-	 * - if allowAllProperties* has been called, we allow unknown properties
-	 * - else, return FALSE.
-	 *
-	 * @param string $propertyName
-	 * @return boolean TRUE if the given propertyName should be mapped, FALSE otherwise.
-	 * @api
-	 */
-	public function shouldMap($propertyName);
-
-	/**
 	 * returns TRUE if the given propertyName should be mapped, FALSE otherwise.
 	 *
 	 * @param string $propertyName

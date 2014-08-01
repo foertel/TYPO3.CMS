@@ -338,26 +338,6 @@ class RepositoryTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 
 	/**
 	 * @test
-	 */
-	public function findByUidReturnsResultOfGetObjectByIdentifierCall() {
-		$fakeUid = '123';
-		$object = new \stdClass();
-		$expectedResult = $object;
-
-		$persistenceManager = $this->getMock('TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface', array('createQueryForType'));
-		$repository = $this->getAccessibleMock('TYPO3\CMS\Extbase\Persistence\Repository', array('findByIdentifier'), array($this->mockObjectManager));
-
-		$repository->expects($this->once())->method('findByIdentifier')->will($this->returnValue($object));
-
-		$repository->_set('persistenceManager', $persistenceManager);
-
-		$actualResult = $repository->findOneByUid($fakeUid);
-
-		$this->assertSame($expectedResult, $actualResult);
-	}
-
-	/**
-	 * @test
 	 * @expectedException \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
 	 */
 	public function updateRejectsObjectsOfWrongType() {

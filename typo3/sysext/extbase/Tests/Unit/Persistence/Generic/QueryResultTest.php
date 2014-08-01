@@ -45,6 +45,11 @@ class QueryResultTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 	protected $sampleResult = array();
 
 	/**
+	 * @var array
+	 */
+	protected $lazyObjects = array();
+
+	/**
 	 * Sets up this test case
 	 *
 	 * @return void
@@ -59,7 +64,7 @@ class QueryResultTest extends \TYPO3\CMS\Core\Tests\UnitTestCase {
 		$this->queryResult->_set('persistenceManager', $this->mockPersistenceManager);
 		$this->queryResult->_set('dataMapper', $this->mockDataMapper);
 		$this->sampleResult = array(array('foo' => 'Foo1', 'bar' => 'Bar1'), array('foo' => 'Foo2', 'bar' => 'Bar2'));
-		$this->mockDataMapper->expects($this->any())->method('map')->will($this->returnValue($this->sampleResult));
+		$this->mockDataMapper->expects($this->any())->method('map')->will($this->returnValue(array($this->sampleResult, $this->lazyObjects)));
 	}
 
 	/**
