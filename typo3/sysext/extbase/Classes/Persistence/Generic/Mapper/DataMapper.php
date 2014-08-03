@@ -13,7 +13,6 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic\Mapper;
  *
  * The TYPO3 project - inspiring people to share!
  */
-
 use TYPO3\CMS\Extbase\Object\Exception\CannotReconstituteObjectException;
 use TYPO3\CMS\Extbase\Persistence;
 use TYPO3\CMS\Extbase\Persistence\Generic\Exception\UnexpectedTypeException;
@@ -307,8 +306,19 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function fetchRelated(DomainObjectInterface $parentObject, $propertyName, $fieldValue = '', $enableLazyLoading = TRUE) {
 		$propertyMetaData = $this->reflectionService->getClassSchema(get_class($parentObject))->getProperty($propertyName);
-		if ($enableLazyLoading === TRUE && $propertyMetaData['lazy']) {
-			if (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
+		$configurationManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManager');
+		$frameworkSettings = $configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManager::CONFIGURATION_TYPE_FRAMEWORK);
+
+		if ($frameworkSettings['persistence']['enhancedLazyLoadingStrategy']) {
+			/**
+			 * For now lazyObjectStorages are treated the same way, legacy lazyLoding was.
+			 * See lazyObjectStorage for more information on this.
+			 */
+
+			if ($enableLazyLoading === TRUE
+				&& $propertyMetaData['lazy']
+				&& in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)
+			) {
 				$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
 			} else {
 				if (empty($fieldValue)) {
@@ -318,8 +328,28 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		} else {
-			$result = $this->fetchRelatedEager($parentObject, $propertyName, $fieldValue);
+			/**
+			 * legacy code. this could be deprecated, if the enhanced lazyLoading works out.
+			 * otherwise it might just stay for an alternative.
+			 *
+			 * @todo check wether this should be deprecated
+			 */
+			if ($enableLazyLoading === TRUE && $propertyMetaData['lazy']) {
+				if (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
+					$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
+				} else {
+					if (empty($fieldValue)) {
+						$result = NULL;
+					} else {
+						$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyLoadingProxy', $parentObject, $propertyName, $fieldValue);
+					}
+				}
+			} else {
+				$result = $this->fetchRelatedEager($parentObject, $propertyName, $fieldValue);
+			}
 		}
+
+
 		return $result;
 	}
 
