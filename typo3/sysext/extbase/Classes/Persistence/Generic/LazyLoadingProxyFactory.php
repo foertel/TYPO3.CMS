@@ -152,7 +152,7 @@ class LazyLoadingProxyFactory {
 			$methodName = $method->getName();
 
 			if ($method->isPublic() && !$method->isFinal() && !$method->isStatic()) {
-				$methods .= PHP_EOL . ' public function ';
+				$methods .= PHP_EOL . '	public function ';
 				if ($method->returnsReference()) {
 					$methods .= '&';
 				}
@@ -190,10 +190,13 @@ class LazyLoadingProxyFactory {
 				$methods .= $parameterString . ') {' . PHP_EOL;
 				if (!(strcasecmp($methodName, '_setClone') === 0
 					|| strcasecmp($methodName, '__clone') === 0)) {
-					$methods .= '    $this->parentQueryResult->fetchLazyObjects($this->propertyName);' . PHP_EOL;
+					$methods .= '	$this->parentQueryResult->fetchLazyObjects($this->propertyName);' . PHP_EOL
+						. '		return $this->parentObject->_getProperty($this->propertyName)->' . $method->getName() . '(' . $argumentString . ');';
+				} else {
+					$methods .= '		return parent::' . $method->getName() . '(' . $argumentString . ');';
 				}
-				$methods .= '    return parent::' . $method->getName() . '(' . $argumentString . ');';
-				$methods .= PHP_EOL . '}' . PHP_EOL;
+
+				$methods .= PHP_EOL . '	}' . PHP_EOL;
 			}
 		}
 
