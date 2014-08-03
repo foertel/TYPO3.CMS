@@ -276,6 +276,9 @@ class QueryResult implements QueryResultInterface {
 	 * @return void
 	 */
 	public function fetchLazyObjects($propertyName) {
-		$this->lazyLoadingService->populateLazyObjects($this->lazyObjectMap[$propertyName], $propertyName);
+		if (!empty($this->lazyObjectMap[$propertyName])) {
+			$this->lazyLoadingService->populateLazyObjects($this->lazyObjectMap[$propertyName], $propertyName);
+			unset($this->lazyObjectMap[$propertyName]);
+		}
 	}
 }
