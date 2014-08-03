@@ -315,11 +315,12 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface {
 			 * See lazyObjectStorage for more information on this.
 			 */
 
-			if ($enableLazyLoading === TRUE
-				&& $propertyMetaData['lazy']
-				&& in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)
-			) {
-				$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
+			if (in_array($propertyMetaData['type'], array('TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage', 'Tx_Extbase_Persistence_ObjectStorage'), TRUE)) {
+				if ($enableLazyLoading === TRUE && $propertyMetaData['lazy']) {
+					$result = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage', $parentObject, $propertyName, $fieldValue);
+				} else {
+					$result = $this->fetchRelatedEager($parentObject, $propertyName, $fieldValue);
+				}
 			} else {
 				if (empty($fieldValue)) {
 					$result = NULL;
