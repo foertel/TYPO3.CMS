@@ -13,13 +13,9 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
  *
  * The TYPO3 project - inspiring people to share!
  */
-use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
-
 /**
  * A proxy that can replace any object and replaces itself in it's parent on
  * first access (call, get, set, isset, unset).
- *
- * @deprecated since 6.3 will be removed two versions later
  */
 class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Generic\LoadingStrategyInterface {
 
@@ -51,11 +47,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	private $fieldValue;
 
 	/**
-	 * @var QueryResultInterface
-	 */
-	protected $parentQueryResult;
-
-	/**
 	 * Constructs this proxy instance.
 	 *
 	 * @param object $parentObject The object instance this proxy is part of
@@ -78,10 +69,14 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 		// usually that does not happen, but if the proxy is held from outside
 		// it's parent... the result would be weird.
 		if ($this->parentObject->_getProperty($this->propertyName) instanceof \TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy) {
-			$this->parentQueryResult->fetchLazyObjects($this->propertyName);
+			$objects = $this->dataMapper->fetchRelated($this->parentObject, $this->propertyName, $this->fieldValue, FALSE, FALSE);
+			$propertyValue = $this->dataMapper->mapResultToPropertyValue($this->parentObject, $this->propertyName, $objects);
+			$this->parentObject->_setProperty($this->propertyName, $propertyValue);
+			$this->parentObject->_memorizeCleanState($this->propertyName);
+			return $propertyValue;
+		} else {
+			return $this->parentObject->_getProperty($this->propertyName);
 		}
-
-		return $this->parentObject->_getProperty($this->propertyName);
 	}
 
 	/**
@@ -96,7 +91,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 		if (!is_object($realInstance)) {
 			return NULL;
 		}
-
 		return call_user_func_array(array($realInstance, $methodName), $arguments);
 	}
 
@@ -108,7 +102,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function __get($propertyName) {
 		$realInstance = $this->_loadRealInstance();
-
 		return $realInstance->{$propertyName};
 	}
 
@@ -132,7 +125,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function __isset($propertyName) {
 		$realInstance = $this->_loadRealInstance();
-
 		return isset($realInstance->{$propertyName});
 	}
 
@@ -154,7 +146,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function __toString() {
 		$realInstance = $this->_loadRealInstance();
-
 		return $realInstance->__toString();
 	}
 
@@ -165,7 +156,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function current() {
 		$realInstance = $this->_loadRealInstance();
-
 		return current($realInstance);
 	}
 
@@ -176,7 +166,6 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function key() {
 		$realInstance = $this->_loadRealInstance();
-
 		return key($realInstance);
 	}
 
@@ -207,31 +196,5 @@ class LazyLoadingProxy implements \Iterator, \TYPO3\CMS\Extbase\Persistence\Gene
 	 */
 	public function valid() {
 		return $this->current() !== FALSE;
-	}
-
-	/**
-	 * @param QueryResultInterface $parentQueryResult
-	 * @return void
-	 */
-	public function setParentQueryResult(QueryResultInterface $parentQueryResult) {
-		$this->parentQueryResult = $parentQueryResult;
-	}
-
-	/**
-	 * Returns the parentObject so we can populate the proxy.
-	 *
-	 * @return object
-	 */
-	public function _getParentObject() {
-		return $this->parentObject;
-	}
-
-	/**
-	 * Returns the fieldValue so we can fetch multiple LazyObjects in one query.
-	 *
-	 * @return mixed
-	 */
-	public function _getFieldValue() {
-		return $this->fieldValue;
 	}
 }
